@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070b16">
+<meta name="robots" content="noindex,nofollow">
+<title>Genezis Admin</title>
+<script>try{var t=localStorage.getItem('gza_theme');if(!t)t='dark';document.documentElement.dataset.theme=t}catch(e){}</script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070b16;--bg2:#0d1428;--card:#111b33;--card2:#16223f;--line:#ffffff17;--tx:#e9efff;--mu:#8e9bbb;
+  --a:#2ee6a6;--b:#38bdf8;--c:#9d7bff;--ok:#2ee6a6;--warn:#fbbf24;--bad:#ff5d73;
+  --grad:linear-gradient(135deg,#2ee6a6,#38bdf8);--on:#04140f;--sh:0 12px 34px #0007;--r:18px;
+  --glow1:#2ee6a61f;--glow2:#9d7bff1f;
+}
+:root[data-theme=light]{
+  --bg:#eef3fb;--bg2:#fff;--card:#fff;--card2:#f3f7fd;--line:#0f1b3318;--tx:#0e1a33;--mu:#5c6a89;
+  --a:#079a6e;--b:#0b7fc0;--c:#6b3fe0;--ok:#079a6e;--warn:#b7791f;--bad:#d62f48;
+  --grad:linear-gradient(135deg,#0fbf8a,#1a9be0);--on:#fff;--sh:0 10px 26px #1c2c5a1a;--glow1:#0fbf8a1c;--glow2:#6b3fe01a;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{font-family:'Cairo',system-ui,Tahoma,sans-serif;color:var(--tx);min-height:100vh;font-size:15px;line-height:1.6;
+  background:radial-gradient(900px 520px at 85% -8%,var(--glow1),transparent 62%),radial-gradient(800px 480px at 0% 0%,var(--glow2),transparent 58%),var(--bg);background-attachment:fixed}
+body.noscroll{overflow:hidden}
+.hidden{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+svg{flex:none}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;direction:ltr;unicode-bidi:plaintext;word-break:break-all}
+.mu{color:var(--mu)}.sm{font-size:12.5px}.big{font-size:16px;font-weight:700}.grow{flex:1;min-width:0}
+
+/* ---------- تسجيل الدخول ---------- */
+#login{min-height:100vh;display:grid;place-items:center;padding:20px}
+.lbox{width:min(400px,100%);background:var(--card);border:1px solid var(--line);border-radius:26px;padding:30px 24px;box-shadow:var(--sh);text-align:center}
+.logo{width:64px;height:64px;border-radius:20px;background:var(--grad);display:grid;place-items:center;margin:0 auto 14px;color:var(--on);font-weight:800;font-size:30px;box-shadow:0 10px 30px #2ee6a644}
+.lbox h1{font-size:22px;font-weight:800}.lbox p{color:var(--mu);margin:4px 0 18px;font-size:14px}
+#lerr{color:var(--bad);min-height:22px;font-size:13.5px;margin-top:8px}
+
+/* ---------- الهيكل ---------- */
+#app{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+aside{position:sticky;top:0;height:100vh;padding:20px 14px;border-left:1px solid var(--line);background:linear-gradient(180deg,var(--bg2),transparent);display:flex;flex-direction:column;gap:4px}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px}
+.brand .logo{width:42px;height:42px;border-radius:14px;font-size:20px;margin:0;box-shadow:none}
+.brand b{font-size:17px;font-weight:800;display:block;line-height:1.2}.brand small{color:var(--mu);font-size:12px}
+.nv{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:14px;color:var(--mu);font-weight:600;position:relative;transition:.15s;white-space:nowrap}
+.nv:hover{background:var(--card2);color:var(--tx)}
+.nv.on{background:var(--grad);color:var(--on)}
+.nv .bd{margin-right:auto;background:var(--bad);color:#fff;border-radius:99px;font-size:11.5px;min-width:20px;height:20px;padding:0 6px;display:grid;place-items:center;font-weight:700}
+.nv.on .bd{background:var(--on);color:var(--a)}
+.side-f{margin-top:auto;display:grid;gap:4px}
+main{padding:22px 26px 40px;min-width:0;max-width:1100px;width:100%}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.top h1{font-size:24px;font-weight:800;flex:1}
+.ib{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);color:var(--mu);transition:.15s}
+.ib:hover{color:var(--tx);border-color:var(--a)}
+.ib.sp svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px #2ee6a622;transition:.2s}
+.dot.sync{background:var(--warn);box-shadow:0 0 0 4px #fbbf2422}.dot.bad{background:var(--bad);box-shadow:0 0 0 4px #ff5d7322}
+#tabs{display:none}
+
+/* ---------- مكوّنات ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.card h3,.sheet h3{font-size:16.5px;font-weight:800}
+.card .hd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.card .hd h3{flex:1}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;gap:12px;align-items:center;text-align:right;transition:.15s;width:100%}
+button.tile:hover{border-color:var(--c);transform:translateY(-2px)}
+.ti{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c)}
+.tv{font-size:23px;font-weight:800;line-height:1.15}
+.tl{font-size:12.5px;color:var(--mu)}
+.grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:7px 14px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--mu);font-weight:600;font-size:13.5px;white-space:nowrap;display:flex;gap:7px;align-items:center}
+.chip.on{background:var(--grad);color:var(--on);border-color:transparent}
+.chip i{font-style:normal;font-size:11.5px;background:#ffffff1f;border-radius:99px;padding:0 7px}
+.chip.on i{background:#0003}
+input[type=text],input[type=password],input[type=number],input[type=url],select,textarea{width:100%;padding:12px 14px;background:var(--card2);border:1.5px solid var(--line);border-radius:14px;outline:none;transition:.15s;margin-bottom:10px}
+textarea{resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--a)}
+label.f{display:block;font-size:13px;color:var(--mu);margin:0 4px 5px;font-weight:600}
+.search{position:relative;margin-bottom:12px}
+.search svg{position:absolute;right:13px;top:13px;color:var(--mu)}
+.search input{padding-right:42px;margin:0}
+.btn{padding:12px 18px;border-radius:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:.15s;border:1.5px solid transparent}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.5;pointer-events:none}
+.btn.pri{background:var(--grad);color:var(--on)}
+.btn.ghost{border-color:var(--line);background:var(--card2)}
+.btn.ghost:hover{border-color:var(--a)}
+.btn.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok);border-color:color-mix(in srgb,var(--ok) 35%,transparent)}
+.btn.bad{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad);border-color:color-mix(in srgb,var(--bad) 35%,transparent)}
+.btn.blk{width:100%}.btn.sm{padding:8px 13px;font-size:13.5px;border-radius:12px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btns .btn{flex:1;min-width:92px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.enter .item{animation:in .25s}
+@keyframes in{from{opacity:0;transform:translateY(6px)}}
+.item.off{opacity:.62}
+.ih{display:flex;gap:10px;align-items:center}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--mu);font-size:13px;margin-top:8px}
+.meta b{color:var(--tx)}
+.badge{padding:3px 11px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}
+.sPending{background:#fbbf2420;color:var(--warn)}.sApproved,.sCompleted{background:#2ee6a620;color:var(--ok)}.sRejected{background:#ff5d7320;color:var(--bad)}
+.badge.v{background:#9d7bff22;color:var(--c)}.badge.b{background:#38bdf822;color:var(--b)}.badge.x{background:#ff5d7320;color:var(--bad)}
+.cps{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.cp{display:flex;gap:7px;align-items:center;padding:7px 12px;border-radius:12px;background:var(--card2);border:1px dashed var(--line);font-size:13px;max-width:100%}
+.cp:hover{border-color:var(--a)}
+.cp .mono{color:var(--a);font-weight:700}
+.note{margin-top:9px;font-size:13px;padding:8px 12px;border-radius:12px;background:var(--card2);color:var(--mu)}
+.note.ok{color:var(--ok)}.note.bad{color:var(--bad)}
+.av{width:44px;height:44px;border-radius:15px;background:var(--grad);color:var(--on);display:grid;place-items:center;font-weight:800;font-size:18px;flex:none}
+.av.bt{background:color-mix(in srgb,var(--b) 18%,transparent);color:var(--b)}
+.empty{text-align:center;color:var(--mu);padding:36px 10px}
+.skl{height:84px;border-radius:var(--r);background:linear-gradient(90deg,var(--card),var(--card2),var(--card));background-size:200% 100%;animation:sk 1.2s infinite;margin-bottom:10px}
+@keyframes sk{to{background-position:-200% 0}}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fld2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.tags span{font-size:11.5px;padding:2px 9px;border-radius:99px;background:var(--card2);color:var(--mu);border:1px solid var(--line)}
+
+/* مفاتيح التبديل وصناديق الاختيار */
+.sw,.ck{position:relative;display:inline-block;flex:none;cursor:pointer}
+.sw input,.ck input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}
+.sw i{display:block;width:46px;height:27px;border-radius:99px;background:var(--card2);border:1.5px solid var(--line);position:relative;transition:.2s}
+.sw i::after{content:"";position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:var(--mu);transition:.2s}
+.sw input:checked+i{background:var(--grad);border-color:transparent}
+.sw input:checked+i::after{right:22px;background:var(--on)}
+.ck i{display:block;width:24px;height:24px;border-radius:8px;border:2px solid var(--line);background:var(--card2);transition:.15s;position:relative}
+.ck input:checked+i{background:var(--grad);border-color:transparent}
+.ck input:checked+i::after{content:"";position:absolute;left:7px;top:3px;width:6px;height:11px;border:solid var(--on);border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+.row2{display:flex;align-items:center;gap:12px;padding:10px 2px}
+
+/* رسم الأسبوع */
+.bars{display:flex;gap:8px;align-items:flex-end;height:150px;padding-top:8px}
+.bc{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;min-width:0}
+.bp{display:flex;gap:3px;align-items:flex-end;width:100%;justify-content:center;flex:1}
+.bp i{display:block;width:42%;max-width:20px;border-radius:7px 7px 3px 3px;min-height:3px;position:relative;transition:height .4s}
+.bp i.g{background:var(--grad)}.bp i.u{background:var(--c)}
+.bp i b{position:absolute;top:-17px;right:50%;transform:translateX(50%);font-size:11px;font-weight:700;color:var(--mu)}
+.bc span{font-size:11.5px;color:var(--mu)}
+.lg{display:flex;gap:14px;font-size:12.5px;color:var(--mu)}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:5px;vertical-align:-1px}
+
+/* نوافذ */
+#mo,#mo2{position:fixed;inset:0;background:#000b;z-index:50;display:flex;align-items:flex-end;justify-content:center;animation:fd .15s}
+#mo2{z-index:60}
+@keyframes fd{from{opacity:0}}
+.sheet{background:var(--bg2);border:1px solid var(--line);width:min(580px,100%);max-height:92vh;overflow:auto;border-radius:26px 26px 0 0;padding:18px;animation:up .2s;overscroll-behavior:contain}
+.sheet.sm{width:min(420px,100%)}
+@keyframes up{from{transform:translateY(30px);opacity:.6}}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.x{width:36px;height:36px;border-radius:12px;background:var(--card2);color:var(--mu);display:grid;place-items:center}
+.imgbox{text-align:center;min-height:120px;display:grid;place-items:center}
+.imgbox img{max-width:100%;border-radius:14px}
+.spin{width:30px;height:30px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--a);animation:spin .7s linear infinite}
+#toast{position:fixed;bottom:90px;left:50%;transform:translate(-50%,20px);background:var(--card2);border:1px solid var(--line);color:var(--tx);padding:11px 20px;border-radius:99px;box-shadow:var(--sh);z-index:80;opacity:0;pointer-events:none;transition:.25s;max-width:92vw;text-align:center;font-weight:600}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.bad{border-color:var(--bad);color:var(--bad)}
+#bulk{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:40;background:var(--card2);border:1px solid var(--a);box-shadow:var(--sh);border-radius:20px;padding:10px 12px;display:flex;gap:8px;align-items:center;width:max-content;max-width:94vw}
+#bulk b{padding:0 8px;font-size:14px}
+details summary{cursor:pointer;font-weight:700;list-style:none;display:flex;align-items:center;gap:8px}
+details summary::-webkit-details-marker{display:none}
+details ol{margin:10px 22px 0 0;color:var(--mu);font-size:13.5px;line-height:2}
+details ol b{color:var(--tx)}
+.err{background:color-mix(in srgb,var(--bad) 14%,transparent);border:1px solid color-mix(in srgb,var(--bad) 35%,transparent);color:var(--bad);padding:12px 14px;border-radius:14px;margin-bottom:14px;font-size:14px}
+
+/* ---------- موبايل ---------- */
+@media(max-width:900px){
+  #app{display:block}
+  aside{display:none}
+  main{padding:14px 14px calc(96px + env(safe-area-inset-bottom))}
+  .top h1{font-size:21px}
+  .tiles{grid-template-columns:1fr 1fr;gap:10px}
+  .tile{padding:12px;gap:10px}.ti{width:38px;height:38px}.tv{font-size:20px}
+  .two{grid-template-columns:1fr}
+  #tabs{display:flex;position:fixed;bottom:0;right:0;left:0;z-index:30;background:var(--bg2);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom));overflow-x:auto;gap:2px;scrollbar-width:none}
+  #tabs::-webkit-scrollbar{display:none}
+  #tabs .nv{flex-direction:column;gap:2px;padding:6px 4px;font-size:11px;min-width:68px;flex:1;border-radius:13px;justify-content:center}
+  #tabs .nv .bd{position:absolute;top:0;left:12px;margin:0;min-width:17px;height:17px;font-size:10px}
+  #bulk{bottom:calc(86px + env(safe-area-inset-bottom))}
+  #toast{bottom:calc(92px + env(safe-area-inset-bottom))}
+}
+@media(min-width:700px){
+  #mo,#mo2{align-items:center}.sheet{border-radius:26px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- تسجيل الدخول -->
+<div id="login" class="hidden">
+  <form class="lbox" id="lform" autocomplete="on">
+    <div class="logo">G</div>
+    <h1>لوحة تحكم Genezis</h1>
+    <p>أدخل كلمة مرور الأدمن للمتابعة</p>
+    <input type="password" id="lpass" placeholder="كلمة المرور" autocomplete="current-password" required>
+    <button class="btn pri blk" id="lbtn" type="submit">دخول</button>
+    <div id="lerr"></div>
+  </form>
+</div>
+
+<!-- التطبيق -->
+<div id="app" class="hidden">
+  <aside>
+    <div class="brand"><div class="logo">G</div><div><b>Genezis</b><small>لوحة الأدمن</small></div></div>
+    <nav id="side" style="display:grid;gap:4px"></nav>
+    <div class="side-f">
+      <button class="nv" data-act="theme"><span id="thIco"></span><span>تغيير الثيم</span></button>
+      <button class="nv" data-act="logout"><span id="loIco"></span><span>تسجيل الخروج</span></button>
+    </div>
+  </aside>
+  <main>
+    <div class="top">
+      <h1 id="ttl"></h1>
+      <span class="dot" id="dot" title="حالة المزامنة"></span>
+      <button class="ib" data-act="reload" id="rl" title="تحديث"></button>
+      <button class="ib" data-act="theme" id="thb" title="الثيم"></button>
+      <button class="ib" data-act="logout" id="lob" title="خروج"></button>
+    </div>
+    <div id="view"></div>
+  </main>
+  <nav id="tabs"></nav>
+</div>
+
+<div id="bulk" class="hidden"></div>
+<div id="mo" class="hidden"></div>
+<div id="mo2" class="hidden"></div>
+<div id="toast"></div>
+
+<script>
+// ======================= الإعدادات =======================
+const API = 'https://script.google.com/macros/s/AKfycbzQnRRiQS_dAtuggCQC1JyggN0BoabSSnvgFFGw2XE0HGvXRvEnkjhpQpnTb98G5cfS/exec';
+const POLL_MS = 4000;      // فحص التغييرات (رد فوري لو مفيش جديد)
+const FULL_EVERY = 22;     // تحديث كامل كل ~90 ثانية (لو عدّلت الشيت يدوياً)
+
+// ======================= أدوات =======================
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = n => (Math.round((+n || 0) * 100) / 100).toLocaleString('en-US');
+const LS = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+const ST = { Pending: 'قيد المراجعة', Approved: 'مقبول', Rejected: 'مرفوض', Completed: 'مكتمل' };
+const EV_DEFAULT = { signup: 'مستخدم جديد', gmail_new: 'طلب جيميل جديد', withdraw_new: 'طلب سحب جديد', gmail_review: 'مراجعة جيميل', withdraw_review: 'مراجعة سحب', user_edit: 'تعديل مستخدم', security: 'تنبيهات أمنية', report: 'تقارير الحالة' };
+
+const IC = {
+  home: '<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  cash: '<rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20M16 15h2"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.7.2 4.5 2 4.5 5"/>',
+  bot: '<rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V5M9 13h.01M15 13h.01M9 16h6"/><circle cx="12" cy="4" r="1"/>',
+  mega: '<path d="M3 11v3a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 9a4 4 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/>',
+  gift: '<rect x="3" y="8" width="18" height="5" rx="1"/><path d="M5 13v7h14v-7M12 8v12M12 8c-2-4-6-3-5 0 .5 1.5 3 1 5 0zm0 0c2-4 6-3 5 0-.5 1.5-3 1-5 0z"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>',
+  img: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M21 16l-5-5-8 8"/>',
+  check: '<path d="M5 12l5 5 9-10"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  refresh: '<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>',
+  out: '<path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M16 8l4 4-4 4M20 12H9"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',
+  moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+  send: '<path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+  coin: '<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5C9.5 8.5 10.5 8 12 8s2.5.6 2.5 1.7-1 1.5-2.5 1.8-2.5.7-2.5 1.8S10.5 15 12 15s2.5-.5 2.5-1.5"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>'
+};
+const ico = (n, s = 20) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[n] || ''}</svg>`;
+
+function ago(t) {
+  const d = new Date(t); if (isNaN(d)) return '';
+  const m = Math.floor((Date.now() - d) / 60000);
+  if (m < 1) return 'الآن';
+  if (m < 60) return 'منذ ' + m + ' د';
+  if (m < 1440) return 'منذ ' + Math.floor(m / 60) + ' س';
+  if (m < 4320) return 'منذ ' + Math.floor(m / 1440) + ' يوم';
+  return d.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' });
+}
+function toast(m, bad) {
+  const t = $('#toast'); t.textContent = m; t.className = (bad ? 'bad ' : '') + 'show';
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2800);
+}
+function beep() {
+  if (LS.get('gza_snd') === '0') return;
+  try {
+    const c = beep.c || (beep.c = new (window.AudioContext || window.webkitAudioContext)());
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = 'sine'; o.frequency.value = 880;
+    g.gain.setValueAtTime(.0001, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(.25, c.currentTime + .02);
+    g.gain.exponentialRampToValueAtTime(.0001, c.currentTime + .35);
+    o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + .36);
+  } catch (e) {}
+}
+function copy(v) {
+  const ok = () => toast('تم النسخ');
+  try { navigator.clipboard.writeText(v).then(ok, fb); } catch (e) { fb(); }
+  function fb() {
+    const t = document.createElement('textarea'); t.value = v; t.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); ok(); } catch (e) { toast('تعذر النسخ', true); }
+    t.remove();
+  }
+}
+
+// ======================= الحالة =======================
+let T = LS.get('gza_t') || '', D = null, VER = '', page = LS.get('gza_p') || 'home';
+let busy = false, again = false, tick = 0, srvErr = '';
+const F = { gs: 'Pending', ws: 'Pending', q: {}, lim: {}, sel: {}, dirty: false, bst: {} };
+const IMG = {};
+
+// ======================= الشبكة =======================
+async function api(action, data = {}) {
+  try {
+    const r = await fetch(API, { method: 'POST', cache: 'no-store', body: JSON.stringify({ action, token: T, ...data }) });
+    const j = await r.json();
+    if (j && j.error === 'unauthorized') { logout('انتهت الجلسة، سجّل الدخول من جديد'); return { success: false, error: 'unauthorized' }; }
+    return j;
+  } catch (e) { return { success: false, error: 'تعذر الاتصال بالخادم' }; }
+}
+function dot(s) { const d = $('#dot'); if (d) d.className = 'dot ' + (s === 'ok' ? '' : s); }
+
+async function sync(force) {
+  if (!T || (document.hidden && !force)) return;
+  if (busy) { if (force) again = true; return; }
+  busy = true; dot('sync');
+  const r = await api('adminSync', { ver: force ? '' : VER });
+  busy = false;
+  if (r.success) {
+    srvErr = '';
+    if (r.changed !== false) applyData(r);
+    dot('ok');
+  } else if (r.error !== 'unauthorized') {
+    dot('bad');
+    srvErr = /غير معروف/.test(r.error || '') ? 'الباك إند قديم: الصق Code.gs الجديد ثم Deploy > New version' : (r.error || '');
+    if (!D) refresh();
+  }
+  const b = $('#rl'); if (b) b.classList.remove('sp');
+  if (again) { again = false; sync(true); }
+}
+
+function applyData(r) {
+  const old = D;
+  D = r; VER = r.ver;
+  if (old) {
+    const og = new Set(old.gmails.filter(x => x.status === 'Pending').map(x => x.id));
+    const ow = new Set(old.withdrawals.filter(x => x.status === 'Pending').map(x => x.id));
+    const ng = D.gmails.filter(x => x.status === 'Pending' && !og.has(x.id)).length;
+    const nw = D.withdrawals.filter(x => x.status === 'Pending' && !ow.has(x.id)).length;
+    if (ng || nw) { toast([ng ? ng + ' جيميل جديد' : '', nw ? nw + ' طلب سحب جديد' : ''].filter(Boolean).join(' + ')); beep(); }
+  }
+  // تنظيف الاختيارات التي لم تعد معلّقة
+  Object.keys(F.sel).forEach(id => { const g = D.gmails.find(x => x.id === id); if (!g || g.status !== 'Pending') delete F.sel[id]; });
+  refresh();
+  clearTimeout(applyData.t);
+  applyData.t = setTimeout(() => LS.set('gza_c', JSON.stringify({ ver: VER, D })), 800);
+}
+
+// ======================= الواجهة العامة =======================
+const NAV = [['home', 'الرئيسية', 'home'], ['gmails', 'الجيميلات', 'mail'], ['wd', 'السحب', 'cash'], ['users', 'المستخدمين', 'users'],
+  ['bots', 'بوتات تليجرام', 'bot'], ['ads', 'الإعلانات', 'mega'], ['refs', 'الإحالات', 'gift'], ['set', 'الإعدادات', 'gear']];
+
+function counts() {
+  if (!D) return { g: 0, w: 0 };
+  return { g: D.gmails.filter(x => x.status === 'Pending').length, w: D.withdrawals.filter(x => x.status === 'Pending').length };
+}
+function drawNav() {
+  const c = counts();
+  const bd = id => (id === 'gmails' && c.g) ? `<span class="bd">${c.g}</span>` : (id === 'wd' && c.w) ? `<span class="bd">${c.w}</span>` : '';
+  const html = NAV.map(([id, l, i]) => `<button class="nv ${page === id ? 'on' : ''}" data-act="go" data-p="${id}">${ico(i, 21)}<span>${l}</span>${bd(id)}</button>`).join('');
+  if (drawNav.h !== html) { drawNav.h = html; const tb = $('#tabs'), sc = tb.scrollLeft; $('#side').innerHTML = html; tb.innerHTML = html; tb.scrollLeft = sc; }
+  document.title = (c.g + c.w ? '(' + (c.g + c.w) + ') ' : '') + 'Genezis Admin';
+}
+function go(p) {
+  page = p; LS.set('gza_p', p); F.dirty = false; closeModal();
+  $('#ttl').textContent = NAV.find(n => n[0] === p)[1];
+  $('#view').innerHTML = PG[p].shell ? PG[p].shell() : '<div id="list"></div>';
+  const v = $('#view'); v.classList.add('enter'); setTimeout(() => v.classList.remove('enter'), 400);
+  refresh(); window.scrollTo(0, 0);
+  const a = $('#tabs .nv.on'); if (a) a.scrollIntoView({ inline: 'center', block: 'nearest' });
+}
+function refresh() {
+  drawNav();
+  const l = $('#list'); if (!l) return;
+  if (page === 'set' && F.dirty) return;
+  l.innerHTML = (srvErr ? `<div class="err">${esc(srvErr)}</div>` : '') + (D ? PG[page].list() : '<div class="skl"></div><div class="skl"></div><div class="skl"></div>');
+  bulkBar();
+}
+function bulkBar() {
+  const n = Object.keys(F.sel).length, b = $('#bulk');
+  if (!n || page !== 'gmails') { b.classList.add('hidden'); return; }
+  b.classList.remove('hidden');
+  b.innerHTML = `<b>${n} محدد</b><button class="btn ok sm" data-act="bulk" data-d="approve">${ico('check', 16)} قبول</button><button class="btn bad sm" data-act="bulk" data-d="reject">${ico('x', 16)} رفض</button><button class="x" data-act="selnone" title="إلغاء">${ico('x', 16)}</button>`;
+}
+function setTheme(t) { document.documentElement.dataset.theme = t; LS.set('gza_theme', t); const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'dark' ? '#070b16' : '#eef3fb'; paintIcons(); }
+function paintIcons() {
+  const dk = document.documentElement.dataset.theme === 'dark';
+  $('#thIco').innerHTML = ico(dk ? 'sun' : 'moon'); $('#thb').innerHTML = ico(dk ? 'sun' : 'moon');
+  $('#loIco').innerHTML = ico('out'); $('#lob').innerHTML = ico('out'); $('#rl').innerHTML = ico('refresh');
+}
+
+// ---------- النوافذ ----------
+function modal(html) { const m = $('#mo'); m.innerHTML = `<div class="sheet">${html}</div>`; m.classList.remove('hidden'); document.body.classList.add('noscroll'); }
+function closeModal() { const m = $('#mo'); m.classList.add('hidden'); m.innerHTML = ''; document.body.classList.remove('noscroll'); }
+function ask({ title, msg = '', note = false, ok = 'تأكيد', bad = false, ph = 'ملاحظة (اختياري)' }) {
+  return new Promise(res => {
+    const el = $('#mo2');
+    el.innerHTML = `<div class="sheet sm"><h3>${esc(title)}</h3>${msg ? `<p class="mu" style="margin:8px 0">${esc(msg)}</p>` : ''}${note ? `<textarea id="askn" rows="2" placeholder="${esc(ph)}" style="margin-top:10px"></textarea>` : ''}<div class="btns"><button class="btn ${bad ? 'bad' : 'pri'}" id="aok">${esc(ok)}</button><button class="btn ghost" id="ano">إلغاء</button></div></div>`;
+    el.classList.remove('hidden');
+    const done = v => { el.classList.add('hidden'); el.innerHTML = ''; res(v); };
+    $('#aok').onclick = () => done({ note: (($('#askn') || {}).value || '').trim() });
+    $('#ano').onclick = () => done(null);
+    el.onclick = e => { if (e.target === el) done(null); };
+  });
+}
+const sheetHead = t => `<div class="sh"><h3>${t}</h3><button class="x" data-act="close">${ico('x', 18)}</button></div>`;
+
+// ======================= الصفحات =======================
+const searchBox = ph => `<div class="search">${ico('search', 18)}<input type="text" id="q" placeholder="${ph}" value="${esc(F.q[page] || '')}" autocomplete="off"></div>`;
+const chipsRow = (arr, cur, act) => `<div class="chips">${arr.map(([k, l, n]) => `<button class="chip ${cur === k ? 'on' : ''}" data-act="${act}" data-v="${k}">${l}<i>${n}</i></button>`).join('')}</div>`;
+const more = (total, shown) => total > shown ? `<button class="btn ghost blk" data-act="more">عرض المزيد (${total - shown})</button>` : '';
+const lim = () => F.lim[page] || 40;
+
+function gCard(g, nosel) {
+  const st = g.status;
+  return `<div class="item">
+    <div class="ih">
+      ${st === 'Pending' && !nosel ? `<label class="ck"><input type="checkbox" data-act="sel" data-id="${g.id}" ${F.sel[g.id] ? 'checked' : ''}><i></i></label>` : ''}
+      <div class="grow"><div class="mono big">${esc(g.gmail)}</div>${g.fullName ? `<div class="mu sm">${esc(g.fullName)}</div>` : ''}</div>
+      <span class="badge s${st}">${ST[st] || st}</span>
+    </div>
+    <div class="cps">
+      <button class="cp" data-act="copy" data-v="${esc(g.gmail)}">${ico('copy', 14)} الإيميل</button>
+      <button class="cp" data-act="copy" data-v="${esc(g.password)}">${ico('copy', 14)} <span class="mono">${esc(g.password) || '—'}</span></button>
+    </div>
+    <div class="meta"><span>${ico('user', 13)} <b class="mono">${esc(g.phone)}</b></span><span><b>${fmt(g.price)}</b> ج.م</span><span>${ago(g.timestamp)}</span></div>
+    ${g.note ? `<div class="note">${esc(g.note)}</div>` : ''}
+    <div class="btns">
+      ${g.hasImage ? `<button class="btn ghost sm" data-act="img" data-id="${g.id}">${ico('img', 16)} الصورة</button>` : ''}
+      ${st === 'Pending' ? `<button class="btn ok sm" data-act="gok" data-id="${g.id}">${ico('check', 16)} قبول</button><button class="btn bad sm" data-act="gno" data-id="${g.id}">${ico('x', 16)} رفض</button>` : ''}
+    </div></div>`;
+}
+function wCard(w) {
+  const st = w.status;
+  return `<div class="item">
+    <div class="ih"><div class="grow"><div class="big grad" style="display:inline-block">${fmt(w.amount)} ج.م</div><div class="mu sm">رسوم ${fmt(w.fee)} • يُخصم ${fmt(w.amount + w.fee)}</div></div><span class="badge s${st}">${ST[st] || st}</span></div>
+    <div class="cps"><button class="cp" data-act="copy" data-v="${esc(w.wallet)}">${ico('copy', 14)} المحفظة <span class="mono">${esc(w.wallet)}</span></button></div>
+    <div class="meta"><span>${ico('user', 13)} <b class="mono">${esc(w.phone)}</b></span><span>${ago(w.timestamp)}</span></div>
+    ${st === 'Pending' ? `<div class="btns"><button class="btn ok sm" data-act="wok" data-id="${w.id}">${ico('check', 16)} تم التحويل</button><button class="btn bad sm" data-act="wno" data-id="${w.id}">${ico('x', 16)} رفض واسترداد</button></div>` : ''}
+  </div>`;
+}
+
+function days7(list, key) {
+  const base = new Date(); base.setHours(0, 0, 0, 0);
+  const out = [];
+  for (let i = 6; i >= 0; i--) { const d = new Date(base); d.setDate(d.getDate() - i); out.push({ d, n: 0 }); }
+  list.forEach(x => { const t = new Date(x[key]); if (isNaN(t)) return; t.setHours(0, 0, 0, 0); const o = out.find(o => o.d.getTime() === t.getTime()); if (o) o.n++; });
+  return out;
+}
+
+const PG = {
+  // ------------------ الرئيسية ------------------
+  home: {
+    list() {
+      const g = D.gmails, w = D.withdrawals, u = D.users;
+      const sod = new Date(); sod.setHours(0, 0, 0, 0);
+      const today = x => new Date(x) >= sod;
+      const pg = g.filter(x => x.status === 'Pending'), pw = w.filter(x => x.status === 'Pending');
+      const tile = (ic, c, v, l, p) => `<button class="tile" style="--c:${c}" data-act="go" data-p="${p}"><div class="ti">${ico(ic, 22)}</div><div><div class="tv">${v}</div><div class="tl">${l}</div></div></button>`;
+      const gd = days7(g, 'timestamp'), ud = days7(u, 'createdAt');
+      const mx = Math.max(1, ...gd.map(x => x.n), ...ud.map(x => x.n));
+      const bar = (n, cls) => `<i class="${cls}" style="height:${Math.max(3, n / mx * 100)}%">${n ? `<b>${n}</b>` : ''}</i>`;
+      return `
+      <div class="tiles">
+        ${tile('users', 'var(--b)', fmt(u.length), 'المستخدمين', 'users')}
+        ${tile('mail', 'var(--warn)', pg.length, 'جيميل قيد المراجعة', 'gmails')}
+        ${tile('check', 'var(--ok)', g.filter(x => x.status === 'Approved').length, 'جيميل مقبول', 'gmails')}
+        ${tile('cash', 'var(--bad)', pw.length, 'سحب معلّق • ' + fmt(pw.reduce((s, x) => s + x.amount, 0)) + ' ج.م', 'wd')}
+        ${tile('coin', 'var(--a)', fmt(u.reduce((s, x) => s + x.balance, 0)), 'أرصدة المستخدمين ج.م', 'users')}
+        ${tile('clock', 'var(--c)', fmt(u.reduce((s, x) => s + x.pending, 0)), 'رصيد معلّق ج.م', 'users')}
+        ${tile('mail', 'var(--b)', g.filter(x => today(x.timestamp)).length, 'طلبات جيميل اليوم', 'gmails')}
+        ${tile('user', 'var(--ok)', u.filter(x => today(x.createdAt)).length, 'مستخدمين جدد اليوم', 'users')}
+      </div>
+      <div class="card"><div class="hd"><h3>آخر 7 أيام</h3><div class="lg"><span><i style="background:var(--a)"></i>جيميلات</span><span><i style="background:var(--c)"></i>مستخدمين</span></div></div>
+        <div class="bars">${gd.map((x, i) => `<div class="bc"><div class="bp">${bar(x.n, 'g')}${bar(ud[i].n, 'u')}</div><span>${x.d.toLocaleDateString('ar-EG', { weekday: 'short' })}</span></div>`).join('')}</div></div>
+      <div class="card"><div class="hd"><h3>إرسال تقرير الحالة</h3><button class="btn ghost sm" data-act="report">${ico('send', 16)} أرسل لكل البوتات</button></div><div class="mu sm">يصل ملخص بآخر الأوضاع لكل بوتات تليجرام النشطة.</div></div>
+      <div class="two"><div>
+        <div class="hd" style="display:flex;margin-bottom:10px"><h3 class="grow">جيميلات تنتظر المراجعة</h3><button class="btn ghost sm" data-act="go" data-p="gmails">الكل</button></div>
+        ${pg.length ? pg.slice(0, 4).map(x => gCard(x, true)).join('') : '<div class="empty card">لا توجد طلبات معلّقة 🎉</div>'}
+      </div><div>
+        <div class="hd" style="display:flex;margin-bottom:10px"><h3 class="grow">سحب ينتظر التحويل</h3><button class="btn ghost sm" data-act="go" data-p="wd">الكل</button></div>
+        ${pw.length ? pw.slice(0, 4).map(wCard).join('') : '<div class="empty card">لا توجد طلبات سحب معلّقة 🎉</div>'}
+      </div></div>`;
+    }
+  },
+
+  // ------------------ الجيميلات ------------------
+  gmails: {
+    shell: () => searchBox('ابحث بالإيميل أو الرقم أو الاسم') + '<div id="list"></div>',
+    list() {
+      const q = (F.q.gmails || '').toLowerCase().trim();
+      const base = D.gmails.filter(g => !q || [g.gmail, g.phone, g.fullName, g.password].some(v => String(v || '').toLowerCase().includes(q)));
+      const c = s => base.filter(g => g.status === s).length;
+      const items = base.filter(g => F.gs === 'all' || g.status === F.gs);
+      const sh = items.slice(0, lim());
+      const pend = items.filter(g => g.status === 'Pending');
+      return chipsRow([['Pending', 'قيد المراجعة', c('Pending')], ['Approved', 'مقبول', c('Approved')], ['Rejected', 'مرفوض', c('Rejected')], ['all', 'الكل', base.length]], F.gs, 'gs') +
+        (F.gs === 'Pending' && pend.length > 1 ? `<div class="row2"><button class="btn ghost sm" data-act="selall">${ico('check', 16)} تحديد كل المعلّق (${pend.length})</button></div>` : '') +
+        (sh.length ? sh.map(g => gCard(g)).join('') + more(items.length, sh.length) : '<div class="empty">لا توجد نتائج</div>');
+    }
+  },
+
+  // ------------------ السحب ------------------
+  wd: {
+    shell: () => searchBox('ابحث بالمحفظة أو الرقم') + '<div id="list"></div>',
+    list() {
+      const q = (F.q.wd || '').toLowerCase().trim();
+      const base = D.withdrawals.filter(w => !q || [w.wallet, w.phone].some(v => String(v || '').toLowerCase().includes(q)));
+      const c = s => base.filter(w => w.status === s).length;
+      const items = base.filter(w => F.ws === 'all' || w.status === F.ws);
+      const sh = items.slice(0, lim());
+      return chipsRow([['Pending', 'معلّق', c('Pending')], ['Completed', 'مكتمل', c('Completed')], ['Rejected', 'مرفوض', c('Rejected')], ['all', 'الكل', base.length]], F.ws, 'ws') +
+        (sh.length ? sh.map(wCard).join('') + more(items.length, sh.length) : '<div class="empty">لا توجد نتائج</div>');
+    }
+  },
+
+  // ------------------ المستخدمين ------------------
+  users: {
+    shell: () => searchBox('ابحث بالاسم أو الرقم أو كود الدعوة') + '<div id="list"></div>',
+    list() {
+      const q = (F.q.users || '').toLowerCase().trim();
+      const items = D.users.filter(u => !q || [u.name, u.phone, u.code].some(v => String(v || '').toLowerCase().includes(q)));
+      const sh = items.slice(0, lim());
+      return `<div class="mu sm" style="margin:0 4px 10px">${items.length} مستخدم</div>` + (sh.length ? sh.map(u => `
+        <div class="item" data-act="user" data-id="${esc(u.phone)}" style="cursor:pointer"><div class="ih">
+          <div class="av">${esc((u.name || '?').trim().charAt(0))}</div>
+          <div class="grow"><div class="big">${esc(u.name)}</div><div class="mu sm mono">${esc(u.phone)}</div></div>
+          <div style="text-align:left"><div class="grad big" style="display:inline-block">${fmt(u.balance)} ج.م</div>${u.pending ? `<div class="mu sm">معلّق ${fmt(u.pending)}</div>` : ''}${u.blocked ? '<div><span class="badge x">محظور</span></div>' : ''}</div>
+        </div></div>`).join('') + more(items.length, sh.length) : '<div class="empty">لا توجد نتائج</div>');
+    }
+  },
+
+  // ------------------ بوتات تليجرام ------------------
+  bots: {
+    list() {
+      const EV = D.events || EV_DEFAULT, hrs = D.reportHours || 0;
+      const opt = [[0, 'متوقف'], [1, 'كل ساعة'], [2, 'كل ساعتين'], [4, 'كل 4 ساعات'], [6, 'كل 6 ساعات'], [12, 'كل 12 ساعة'], [24, 'يومياً 9 صباحاً']];
+      const card = b => { const st = F.bst[b.id]; return `
+        <div class="item ${b.active ? '' : 'off'}"><div class="ih">
+          <div class="av bt">${ico('bot', 24)}</div>
+          <div class="grow"><div class="big">${esc(b.name)}</div><div class="mu sm"><span class="mono" style="display:inline-block">${esc(b.tokenMask)}</span></div><div class="mu sm">Chat ID: <span class="mono" style="display:inline-block">${esc(b.chat)}</span></div></div>
+          <label class="sw" title="تفعيل/إيقاف"><input type="checkbox" data-act="bton" data-id="${b.id}" ${b.active ? 'checked' : ''}><i></i></label>
+        </div>
+        <div class="tags">${(b.events.length === Object.keys(EV).length ? ['كل الإشعارات'] : b.events.map(k => EV[k] || k)).map(l => `<span>${esc(l)}</span>`).join('')}</div>
+        ${st ? `<div class="note ${st.ok ? 'ok' : 'bad'}">${esc(st.msg)}</div>` : ''}
+        <div class="btns"><button class="btn ghost sm" data-act="bttest" data-id="${b.id}">${ico('send', 16)} اختبار</button><button class="btn ghost sm" data-act="btedit" data-id="${b.id}">${ico('edit', 16)} تعديل</button><button class="btn bad sm" data-act="btdel" data-id="${b.id}">${ico('trash', 16)} حذف</button></div></div>`; };
+      return `
+      <div class="btns" style="margin:0 0 14px"><button class="btn pri" data-act="btadd">${ico('plus', 18)} إضافة بوت</button><button class="btn ghost" data-act="bcast">${ico('send', 18)} رسالة لكل البوتات</button></div>
+      ${D.bots.length ? D.bots.map(card).join('') : '<div class="empty card">لا توجد بوتات بعد. أضف أول بوت لتصلك التحديثات على تليجرام.</div>'}
+      <div class="card"><div class="hd"><h3>تقرير دوري تلقائي</h3></div>
+        <div class="two" style="gap:10px"><select id="rep" data-act="rep" style="margin:0">${opt.map(([v, l]) => `<option value="${v}" ${+hrs === v ? 'selected' : ''}>${l}</option>`).join('')}</select><button class="btn ghost" data-act="report">${ico('send', 16)} أرسل تقرير الآن</button></div>
+        <div class="mu sm" style="margin-top:8px">يُرسَل ملخص (مستخدمين، طلبات، سحب، أرصدة) للبوتات المفعّل عندها «تقارير الحالة».</div></div>
+      <div class="card"><details><summary>${ico('bot', 18)} إزاي أنشئ بوت وأربطه؟</summary><ol>
+        <li>افتح تليجرام وكلّم <b>@BotFather</b> ثم ابعت <b>/newbot</b> وانسخ <b>التوكن</b>.</li>
+        <li>افتح البوت الجديد واضغط <b>Start</b> (أو أضفه لجروب/قناة كأدمن).</li>
+        <li>اضغط «إضافة بوت»، الصق التوكن، ثم اضغط <b>اكتشف</b> ليظهر الـ Chat ID تلقائياً.</li>
+        <li>اختر أنواع الإشعارات اللي عايزها واضغط <b>اختبار</b> ثم <b>حفظ</b>.</li></ol></details></div>`;
+    }
+  },
+
+  // ------------------ الإعلانات ------------------
+  ads: {
+    list() {
+      return `<div class="btns" style="margin:0 0 14px"><button class="btn pri" data-act="adnew">${ico('plus', 18)} إعلان جديد</button></div>` +
+        (D.ads.length ? D.ads.map(a => `
+        <div class="item ${a.active ? '' : 'off'}"><div class="ih"><div class="grow"><div class="big">${esc(a.title) || '(بدون عنوان)'}</div><div class="mu sm">${esc(a.text)}</div></div>
+          <label class="sw"><input type="checkbox" data-act="adon" data-id="${a.id}" ${a.active ? 'checked' : ''}><i></i></label></div>
+          <div class="tags"><span>${a.placement === 'popup' ? 'نافذة منبثقة' : 'بانر'}</span>${a.dismissible ? '<span>قابل للإغلاق</span>' : ''}${a.buttonText ? `<span>زر: ${esc(a.buttonText)}</span>` : ''}</div>
+          <div class="btns"><button class="btn ghost sm" data-act="adedit" data-id="${a.id}">${ico('edit', 16)} تعديل</button><button class="btn bad sm" data-act="addel" data-id="${a.id}">${ico('trash', 16)} حذف</button></div></div>`).join('') : '<div class="empty card">لا توجد إعلانات</div>');
+    }
+  },
+
+  // ------------------ الإحالات ------------------
+  refs: {
+    list() {
+      const r = D.referrals, sum = t => r.filter(x => x.type === t).reduce((s, x) => s + x.amount, 0);
+      const nm = p => { const u = D.users.find(x => x.phone === p); return u ? u.name : p; };
+      return `<div class="tiles" style="grid-template-columns:repeat(3,1fr)">
+        <div class="tile" style="--c:var(--ok)"><div class="ti">${ico('coin', 22)}</div><div><div class="tv">${fmt(sum('commission') + sum('bonus'))}</div><div class="tl">إجمالي المدفوع ج.م</div></div></div>
+        <div class="tile" style="--c:var(--b)"><div class="ti">${ico('chart', 22)}</div><div><div class="tv">${fmt(sum('commission'))}</div><div class="tl">عمولات</div></div></div>
+        <div class="tile" style="--c:var(--c)"><div class="ti">${ico('gift', 22)}</div><div><div class="tv">${fmt(sum('bonus'))}</div><div class="tl">مكافآت</div></div></div></div>` +
+        (r.length ? r.slice(0, lim()).map(x => `<div class="item"><div class="ih"><div class="grow"><div class="big">${esc(nm(x.referrer))} <span class="mu">←</span> ${esc(nm(x.friend))}</div><div class="mu sm mono">${esc(x.referrer)} ← ${esc(x.friend)}</div></div>
+          <div style="text-align:left"><div class="big grad" style="display:inline-block">+${fmt(x.amount)}</div><div><span class="badge ${x.type === 'bonus' ? 'v' : 'b'}">${x.type === 'bonus' ? 'مكافأة' : 'عمولة'}</span></div></div></div><div class="meta"><span>${ago(x.timestamp)}</span></div></div>`).join('') + more(r.length, Math.min(r.length, lim())) : '<div class="empty">لا توجد إحالات بعد</div>');
+    }
+  },
+
+  // ------------------ الإعدادات ------------------
+  set: {
+    list() {
+      const s = D.settings, f = [['gmailPrice', 'سعر الجيميل (ج.م)'], ['minWithdraw', 'الحد الأدنى للسحب (ج.م)'], ['withdrawFee', 'رسوم السحب (ج.م)'], ['referralBonus', 'مكافأة الإحالة (ج.م)'], ['commissionPct', 'نسبة عمولة الإحالة (%)'], ['bonusAfterApproved', 'عدد الجيميلات المقبولة لصرف المكافأة']];
+      return `<div class="card"><div class="hd"><h3>إعدادات التطبيق</h3></div><div class="fld2">${f.map(([k, l]) => `<div><label class="f">${l}</label><input type="number" step="any" min="0" data-set="${k}" value="${esc(s[k])}"></div>`).join('')}</div>
+        <button class="btn pri blk" data-act="saveset">حفظ الإعدادات</button></div>
+        <div class="card"><div class="hd"><h3>تغيير كلمة مرور الأدمن</h3></div><input type="password" id="np" placeholder="كلمة المرور الجديدة (4 أحرف على الأقل)" autocomplete="new-password"><button class="btn ghost blk" data-act="savepass">تغيير كلمة المرور</button></div>
+        <div class="card"><div class="hd"><h3>تفضيلات هذا الجهاز</h3></div>
+          <div class="row2"><div class="grow">صوت تنبيه عند وصول طلب جديد</div><label class="sw"><input type="checkbox" data-act="snd" ${LS.get('gza_snd') === '0' ? '' : 'checked'}><i></i></label></div>
+          <div class="row2"><div class="grow">الثيم</div><button class="btn ghost sm" data-act="theme">تبديل فاتح / داكن</button></div></div>
+        <div class="card"><div class="mu sm">إصدار الباك إند: <b class="mono">${esc(D.backend || '—')}</b></div></div>`;
+    }
+  }
+};
+
+// ======================= الإجراءات =======================
+const ACT = {
+  go: d => go(d.p),
+  close: () => closeModal(),
+  theme: () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'),
+  logout: () => logout(''),
+  reload: () => { $('#rl').classList.add('sp'); sync(true); },
+  copy: d => copy(d.v),
+  gs: d => { F.gs = d.v; F.lim.gmails = 0; refresh(); },
+  ws: d => { F.ws = d.v; F.lim.wd = 0; refresh(); },
+  more: () => { F.lim[page] = lim() + 40; refresh(); },
+  sel: (d, t) => { t.checked ? F.sel[d.id] = 1 : delete F.sel[d.id]; bulkBar(); },
+  selall: () => { D.gmails.filter(g => g.status === 'Pending').forEach(g => F.sel[g.id] = 1); refresh(); },
+  selnone: () => { F.sel = {}; refresh(); },
+  snd: (d, t) => LS.set('gza_snd', t.checked ? '1' : '0'),
+
+  async img(d) {
+    modal(sheetHead('صورة السكرين شوت') + '<div id="imgbox" class="imgbox"><div class="spin"></div></div>');
+    const id = d.id;
+    if (!IMG[id]) {
+      const r = await api('adminGetImage', { id });
+      const b = $('#imgbox'); if (!b) return;
+      if (!r.success) { b.innerHTML = `<p class="mu">${esc(r.error || 'تعذر التحميل')}</p>`; return; }
+      const k = Object.keys(IMG); if (k.length > 8) delete IMG[k[0]];
+      IMG[id] = r.image;
+    }
+    const b = $('#imgbox'); if (b) b.innerHTML = `<img src="${IMG[id]}" alt="">`;
+  },
+  gok: d => reviewGmail(d.id, 'approve', ''),
+  async gno(d) { const r = await ask({ title: 'رفض الجيميل', note: true, ok: 'رفض', bad: true, ph: 'سبب الرفض (يظهر للمستخدم)' }); if (r) reviewGmail(d.id, 'reject', r.note); },
+  async bulk(d) {
+    const ids = Object.keys(F.sel); if (!ids.length) return;
+    const ap = d.d === 'approve';
+    const r = await ask({ title: (ap ? 'قبول ' : 'رفض ') + ids.length + ' جيميل', note: !ap, ok: ap ? 'قبول الكل' : 'رفض الكل', bad: !ap, ph: 'سبب الرفض (اختياري)' });
+    if (!r) return;
+    const snap = ids.map(id => D.gmails.find(g => g.id === id)).filter(Boolean).map(g => [g, g.status, g.note]);
+    snap.forEach(([g]) => { g.status = ap ? 'Approved' : 'Rejected'; g.note = r.note; });
+    F.sel = {}; refresh(); toast('جاري التنفيذ...');
+    const res = await api('adminReviewGmailBatch', { ids, decision: d.d, note: r.note });
+    if (!res.success) { snap.forEach(([g, s, n]) => { g.status = s; g.note = n; }); refresh(); toast(res.error || 'فشل', true); }
+    else toast('تم: ' + res.done + (res.failed ? ' • تعذّر ' + res.failed : ''), !!res.failed);
+    sync(true);
+  },
+  async wok(d) {
+    const w = D.withdrawals.find(x => x.id === d.id); if (!w) return;
+    const r = await ask({ title: 'تأكيد التحويل', msg: `هل حوّلت ${fmt(w.amount)} ج.م إلى ${w.wallet}؟`, ok: 'نعم، تم التحويل' });
+    if (r) reviewWd(d.id, 'approve');
+  },
+  async wno(d) {
+    const w = D.withdrawals.find(x => x.id === d.id); if (!w) return;
+    const r = await ask({ title: 'رفض طلب السحب', msg: `سيُرجَع ${fmt(w.amount + w.fee)} ج.م لرصيد المستخدم.`, ok: 'رفض واسترداد', bad: true });
+    if (r) reviewWd(d.id, 'reject');
+  },
+
+  // ---- المستخدمين ----
+  user(d) {
+    const u = D.users.find(x => x.phone === d.id); if (!u) return;
+    const g = D.gmails.filter(x => x.phone === u.phone), c = s => g.filter(x => x.status === s).length;
+    const wd = D.withdrawals.filter(x => x.phone === u.phone);
+    modal(sheetHead(esc(u.name)) + `
+      <div class="tags" style="margin:-6px 0 14px"><span class="mono">${esc(u.phone)}</span><span>كود: <b class="mono">${esc(u.code)}</b></span>${u.referredBy ? `<span>دعاه: <b class="mono">${esc(u.referredBy)}</b></span>` : ''}<span>انضم ${ago(u.createdAt)}</span></div>
+      <div class="tags" style="margin:0 0 14px"><span>جيميلات: ${g.length}</span><span style="color:var(--ok)">مقبول ${c('Approved')}</span><span style="color:var(--warn)">معلّق ${c('Pending')}</span><span style="color:var(--bad)">مرفوض ${c('Rejected')}</span><span>سحوبات: ${wd.length}</span></div>
+      <label class="f">الاسم</label><input type="text" id="un" value="${esc(u.name)}">
+      <div class="fld2"><div><label class="f">الرصيد (ج.م)</label><input type="number" step="any" id="ub" value="${u.balance}"></div><div><label class="f">الرصيد المعلّق (ج.م)</label><input type="number" step="any" id="up" value="${u.pending}"></div></div>
+      <label class="f">كلمة مرور جديدة (اتركها فارغة لعدم التغيير)</label><input type="text" id="upw" autocomplete="off">
+      <div class="row2"><div class="grow"><b>حظر المستخدم</b><div class="mu sm">لن يستطيع الدخول أو استخدام التطبيق</div></div><label class="sw"><input type="checkbox" id="ubl" ${u.blocked ? 'checked' : ''}><i></i></label></div>
+      <div class="btns"><button class="btn pri" data-act="usave" data-id="${esc(u.phone)}">حفظ</button><button class="btn ghost" data-act="ugm" data-id="${esc(u.phone)}">جيميلاته</button></div>`);
+  },
+  async usave(d) {
+    const u = D.users.find(x => x.phone === d.id); if (!u) return;
+    const body = { phone: u.phone, name: $('#un').value, balance: $('#ub').value, pending: $('#up').value, blocked: $('#ubl').checked, newPass: $('#upw').value };
+    const btn = $('[data-act=usave]'); btn.disabled = true;
+    const r = await api('adminUpdateUser', body);
+    if (!r.success) { btn.disabled = false; return toast(r.error || 'فشل الحفظ', true); }
+    Object.assign(u, { name: body.name || u.name, balance: +body.balance || 0, pending: +body.pending || 0, blocked: body.blocked });
+    closeModal(); refresh(); toast('تم الحفظ'); sync(true);
+  },
+  ugm: d => { closeModal(); F.q.gmails = d.id; F.gs = 'all'; go('gmails'); },
+
+  // ---- الإعدادات ----
+  async saveset() {
+    const s = {}; document.querySelectorAll('[data-set]').forEach(i => s[i.dataset.set] = i.value);
+    const r = await api('adminSaveSettings', { settings: s });
+    if (r.success) { Object.assign(D.settings, s); F.dirty = false; toast('تم حفظ الإعدادات'); sync(true); } else toast(r.error || 'فشل', true);
+  },
+  async savepass() {
+    const v = $('#np').value; if (v.length < 4) return toast('كلمة المرور قصيرة', true);
+    const r = await api('adminChangePassword', { newPassword: v });
+    if (r.success) { $('#np').value = ''; toast('تم تغيير كلمة المرور'); } else toast(r.error || 'فشل', true);
+  },
+
+  // ---- الإعلانات ----
+  adnew: () => adForm(null),
+  adedit: d => adForm(D.ads.find(a => a.id === d.id)),
+  async adon(d, t) {
+    const a = D.ads.find(x => x.id === d.id); if (!a) return;
+    a.active = t.checked; refresh();
+    const r = await api('adminSaveAd', { ad: a });
+    if (!r.success) { a.active = !t.checked; refresh(); toast(r.error || 'فشل', true); } else sync(true);
+  },
+  async addel(d) {
+    const r = await ask({ title: 'حذف الإعلان؟', msg: 'لا يمكن التراجع.', ok: 'حذف', bad: true }); if (!r) return;
+    const i = D.ads.findIndex(a => a.id === d.id), a = D.ads[i]; D.ads.splice(i, 1); refresh();
+    const res = await api('adminDeleteAd', { id: d.id });
+    if (!res.success) { D.ads.splice(i, 0, a); refresh(); toast(res.error || 'فشل', true); } else { toast('تم الحذف'); sync(true); }
+  },
+  async adsave() {
+    const ad = { id: $('#adid').value || undefined, placement: $('#adpl').value, title: $('#adt').value, text: $('#adx').value, buttonText: $('#adbt').value, buttonUrl: $('#adbu').value, active: $('#adac').checked, dismissible: $('#addm').checked };
+    if (!ad.title && !ad.text) return toast('اكتب عنواناً أو نصاً', true);
+    const r = await api('adminSaveAd', { ad });
+    if (r.success) { closeModal(); toast('تم الحفظ'); sync(true); } else toast(r.error || 'فشل', true);
+  },
+
+  // ---- تليجرام ----
+  btadd: () => botForm(null),
+  btedit: d => botForm(D.bots.find(b => b.id === d.id)),
+  async bton(d, t) {
+    const b = D.bots.find(x => x.id === d.id); if (!b) return;
+    b.active = t.checked; refresh();
+    const r = await api('adminSaveBot', { bot: { id: b.id, name: b.name, chat: b.chat, events: b.events, active: b.active } });
+    if (!r.success) { b.active = !t.checked; refresh(); toast(r.error || 'فشل', true); } else sync(true);
+  },
+  async bttest(d) {
+    F.bst[d.id] = { ok: true, msg: 'جاري الاختبار...' }; refresh();
+    const r = await api('adminTestBot', { id: d.id });
+    F.bst[d.id] = { ok: !!r.success, msg: r.success ? '✓ وصلت رسالة الاختبار عبر @' + r.username : (r.error || 'فشل') };
+    refresh(); setTimeout(() => { delete F.bst[d.id]; if (page === 'bots') refresh(); }, 15000);
+  },
+  async btdel(d) {
+    const b = D.bots.find(x => x.id === d.id); if (!b) return;
+    const r = await ask({ title: 'حذف البوت «' + b.name + '»؟', msg: 'لن تصل إليه أي إشعارات بعد الآن.', ok: 'حذف', bad: true }); if (!r) return;
+    const i = D.bots.indexOf(b); D.bots.splice(i, 1); refresh();
+    const res = await api('adminDeleteBot', { id: d.id });
+    if (!res.success) { D.bots.splice(i, 0, b); refresh(); toast(res.error || 'فشل', true); } else { toast('تم الحذف'); sync(true); }
+  },
+  btall: (d, t) => document.querySelectorAll('.evk').forEach(c => c.checked = t.checked),
+  async btdisc(d, t) {
+    const out = $('#disc'); out.innerHTML = '<div class="spin" style="margin:8px auto"></div>';
+    const r = await api('adminBotDiscover', { id: $('#bid').value || undefined, token: $('#btk').value });
+    if (!r.success) { out.innerHTML = `<div class="note bad">${esc(r.error)}</div>`; return; }
+    out.innerHTML = `<div class="mu sm" style="margin-bottom:6px">البوت @${esc(r.username)} — اختر المحادثة:</div><div class="chips" style="flex-wrap:wrap">${r.chats.map(c => `<button type="button" class="chip" data-act="pickchat" data-id="${esc(c.id)}">${esc(c.title)} <i class="mono">${esc(c.id)}</i></button>`).join('')}</div>`;
+  },
+  pickchat: d => { $('#bchat').value = d.id; toast('تم اختيار المحادثة'); },
+  async bttestform() {
+    const out = $('#disc'); out.innerHTML = '<div class="spin" style="margin:8px auto"></div>';
+    const r = await api('adminTestBot', { id: $('#bid').value || undefined, token: $('#btk').value, chat: $('#bchat').value });
+    out.innerHTML = `<div class="note ${r.success ? 'ok' : 'bad'}">${r.success ? '✓ نجح الاختبار — راجع تليجرام (@' + esc(r.username) + ')' : esc(r.error)}</div>`;
+  },
+  async btsave() {
+    const ev = [...document.querySelectorAll('.evk:checked')].map(c => c.value);
+    const bot = { id: $('#bid').value || undefined, name: $('#bn').value, token: $('#btk').value, chat: $('#bchat').value, events: ev, active: $('#bac').checked };
+    const btn = $('[data-act=btsave]'); btn.disabled = true;
+    const r = await api('adminSaveBot', { bot });
+    if (r.success) { closeModal(); toast('تم حفظ البوت'); sync(true); } else { btn.disabled = false; toast(r.error || 'فشل', true); }
+  },
+  bcast() {
+    modal(sheetHead('رسالة لكل البوتات') + `<textarea id="bcm" rows="4" placeholder="اكتب الرسالة..."></textarea><button class="btn pri blk" data-act="bcsend">${ico('send', 18)} إرسال</button>`);
+  },
+  async bcsend() {
+    const t = $('#bcm').value.trim(); if (!t) return toast('اكتب الرسالة', true);
+    const btn = $('[data-act=bcsend]'); btn.disabled = true;
+    const r = await api('adminBroadcast', { text: t });
+    if (r.success) { closeModal(); toast('أُرسلت إلى ' + r.sent + ' بوت' + (r.failed ? ' • فشل ' + r.failed : '')); } else { btn.disabled = false; toast(r.error || 'فشل', true); }
+  },
+  async report() {
+    toast('جاري الإرسال...');
+    const r = await api('adminSendReport');
+    toast(r.success ? 'أُرسل التقرير إلى ' + r.sent + ' بوت' : (r.error || 'فشل'), !r.success);
+  },
+  async rep(d, t) {
+    const r = await api('adminSetReport', { hours: t.value });
+    if (r.success) { D.reportHours = +t.value; toast(+t.value ? 'تم تفعيل التقرير الدوري' : 'تم إيقاف التقرير الدوري'); sync(true); }
+    else { toast((r.error || 'فشل') + ' — شغّل setup من محرر السكريبت ووافق على الصلاحيات', true); t.value = D.reportHours || 0; }
+  }
+};
+
+async function reviewGmail(id, decision, note) {
+  const g = D.gmails.find(x => x.id === id); if (!g || g.status !== 'Pending') return;
+  const old = [g.status, g.note];
+  g.status = decision === 'approve' ? 'Approved' : 'Rejected'; g.note = note; delete F.sel[id]; refresh();
+  const r = await api('adminReviewGmail', { id, decision, note });
+  if (!r.success) { [g.status, g.note] = old; refresh(); toast(r.error || 'فشل', true); }
+  else toast(decision === 'approve' ? 'تم القبول ✓' : 'تم الرفض');
+  sync(true);
+}
+async function reviewWd(id, decision) {
+  const w = D.withdrawals.find(x => x.id === id); if (!w || w.status !== 'Pending') return;
+  w.status = decision === 'approve' ? 'Completed' : 'Rejected'; refresh();
+  const r = await api('adminReviewWithdrawal', { id, decision });
+  if (!r.success) { w.status = 'Pending'; refresh(); toast(r.error || 'فشل', true); }
+  else toast(decision === 'approve' ? 'تم تأكيد التحويل ✓' : 'تم الرفض واسترداد الرصيد');
+  sync(true);
+}
+
+function adForm(a) {
+  a = a || { placement: 'banner', active: true, dismissible: true };
+  modal(sheetHead(a.id ? 'تعديل إعلان' : 'إعلان جديد') + `<input type="hidden" id="adid" value="${esc(a.id || '')}">
+    <label class="f">مكان الظهور</label><select id="adpl"><option value="banner" ${a.placement !== 'popup' ? 'selected' : ''}>بانر داخل الصفحة</option><option value="popup" ${a.placement === 'popup' ? 'selected' : ''}>نافذة منبثقة</option></select>
+    <label class="f">العنوان</label><input type="text" id="adt" value="${esc(a.title || '')}">
+    <label class="f">النص</label><textarea id="adx" rows="3">${esc(a.text || '')}</textarea>
+    <div class="fld2"><div><label class="f">نص الزر</label><input type="text" id="adbt" value="${esc(a.buttonText || '')}"></div><div><label class="f">رابط الزر</label><input type="url" id="adbu" dir="ltr" placeholder="https://" value="${esc(a.buttonUrl || '')}"></div></div>
+    <div class="row2"><div class="grow">مفعّل</div><label class="sw"><input type="checkbox" id="adac" ${a.active ? 'checked' : ''}><i></i></label></div>
+    <div class="row2"><div class="grow">يمكن للمستخدم إغلاقه</div><label class="sw"><input type="checkbox" id="addm" ${a.dismissible ? 'checked' : ''}><i></i></label></div>
+    <button class="btn pri blk" style="margin-top:8px" data-act="adsave">حفظ</button>`);
+}
+
+function botForm(b) {
+  const EV = D.events || EV_DEFAULT;
+  b = b || { name: '', chat: '', events: Object.keys(EV), active: true };
+  modal(sheetHead(b.id ? 'تعديل بوت' : 'إضافة بوت تليجرام') + `<input type="hidden" id="bid" value="${esc(b.id || '')}">
+    <label class="f">اسم البوت (للتمييز فقط)</label><input type="text" id="bn" value="${esc(b.name)}" placeholder="مثال: بوت الإدارة" maxlength="40">
+    <label class="f">التوكن (من BotFather)</label><input type="text" id="btk" dir="ltr" autocomplete="off" placeholder="${b.id ? 'اتركه فارغاً للإبقاء على: ' + esc(b.tokenMask) : '123456789:AAH...'}">
+    <label class="f">Chat ID</label>
+    <div style="display:flex;gap:8px"><input type="text" id="bchat" dir="ltr" value="${esc(b.chat)}" placeholder="مثال: 123456789 أو -100123..." style="margin:0"><button type="button" class="btn ghost" data-act="btdisc" style="white-space:nowrap">اكتشف</button></div>
+    <div id="disc" style="margin:8px 0 12px"></div>
+    <label class="f">أنواع الإشعارات</label>
+    <div class="card" style="padding:6px 14px;margin-bottom:10px">
+      <div class="row2"><label class="ck"><input type="checkbox" class="evall" data-act="btall" ${b.events.length === Object.keys(EV).length ? 'checked' : ''}><i></i></label><b class="grow">تحديد الكل</b></div>
+      ${Object.keys(EV).map(k => `<div class="row2" style="padding:6px 2px"><label class="ck"><input type="checkbox" class="evk" value="${k}" ${b.events.includes(k) ? 'checked' : ''}><i></i></label><span class="grow">${esc(EV[k])}</span></div>`).join('')}
+    </div>
+    <div class="row2"><div class="grow"><b>مفعّل</b></div><label class="sw"><input type="checkbox" id="bac" ${b.active ? 'checked' : ''}><i></i></label></div>
+    <div class="btns"><button class="btn pri" data-act="btsave">حفظ</button><button class="btn ghost" data-act="bttestform">${ico('send', 16)} اختبار</button></div>`);
+}
+
+// ======================= الأحداث =======================
+document.addEventListener('click', e => {
+  if (e.target.id === 'mo') return closeModal();
+  const t = e.target.closest('[data-act]'); if (!t) return;
+  const f = ACT[t.dataset.act];
+  if (f && t.tagName !== 'SELECT') f(t.dataset, t, e);
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.tagName === 'SELECT' && t.dataset.act) ACT[t.dataset.act](t.dataset, t, e);
+  if (t.classList.contains('evk')) { const all = document.querySelectorAll('.evk'); const a = $('.evall'); if (a) a.checked = [...all].every(c => c.checked); }
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id === 'q') { clearTimeout(t._d); t._d = setTimeout(() => { F.q[page] = t.value; F.lim[page] = 0; refresh(); }, 120); }
+  else if (page === 'set' && t.closest('#list')) F.dirty = true;
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#mo2').classList.contains('hidden')) $('#ano') && $('#ano').click(); else closeModal(); } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) sync(true); });
+
+// ======================= الدخول / الخروج =======================
+$('#lform').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = $('#lbtn'), err = $('#lerr'); btn.disabled = true; btn.textContent = 'جاري الدخول...'; err.textContent = '';
+  const r = await api('adminLogin', { password: $('#lpass').value });
+  btn.disabled = false; btn.textContent = 'دخول';
+  if (r.success) { T = r.token; LS.set('gza_t', T); $('#lpass').value = ''; start(); }
+  else err.textContent = r.error === 'unauthorized' ? '' : (r.error || 'فشل الدخول');
+});
+function logout(msg) {
+  T = ''; D = null; VER = ''; LS.del('gza_t'); LS.del('gza_c'); closeModal();
+  $('#app').classList.add('hidden'); $('#bulk').classList.add('hidden'); $('#login').classList.remove('hidden');
+  $('#lerr').textContent = msg || ''; document.title = 'Genezis Admin';
+}
+function start() {
+  $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
+  paintIcons();
+  if (!PG[page]) page = 'home';
+  try { const c = JSON.parse(LS.get('gza_c') || 'null'); if (c && c.D) { D = c.D; VER = c.ver; } } catch (e) {}
+  go(page); sync(true);
+}
+setInterval(() => { if (T) { tick++; sync(tick % FULL_EVERY === 0); } }, POLL_MS);
+if (T) start(); else { $('#login').classList.remove('hidden'); paintIcons(); }
+</script>
+</body>
+</html>
