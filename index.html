@@ -847,6 +847,157 @@ function botForm(b) {
     <div class="btns"><button class="btn pri" data-act="btsave">حفظ</button><button class="btn ghost" data-act="bttestform">${ico('send', 16)} اختبار</button></div>`);
 }
 
+  // ======================= التحديث والمحتوى (إضافة) =======================
+// الصق هذا الكود كاملاً في ملف الأدمن قبل السطر:
+// // ======================= الأحداث =======================
+(function () {
+  const st = document.createElement('style');
+  st.textContent = '.prog{height:10px;border-radius:99px;background:var(--card2);overflow:hidden;margin:10px 0 6px}.prog i{display:block;height:100%;width:0;background:var(--grad);transition:width .2s;border-radius:99px}input[type=file]{width:100%;padding:10px;background:var(--card2);border:1.5px dashed var(--line);border-radius:14px;margin-bottom:10px}';
+  document.head.appendChild(st);
+})();
+
+Object.assign(IC, {
+  upd: '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
+  video: '<rect x="3" y="5" width="14" height="14" rx="2"/><path d="M17 10l4-2v8l-4-2"/>'
+});
+NAV.splice(NAV.length - 1, 0, ['upd', 'التحديث والمحتوى', 'upd']);
+
+const UP = { lock: false, busy: false };
+// لا نعيد رسم الصفحة أثناء الكتابة أو الرفع حتى لا تضيع البيانات
+(function () {
+  const _refresh = refresh, _go = go;
+  refresh = function () { if (page === 'upd' && (UP.lock || UP.busy)) { drawNav(); return; } _refresh(); };
+  go = function (p) { UP.lock = false; _go(p); };
+})();
+document.addEventListener('input', e => { if (page === 'upd' && e.target.closest && e.target.closest('#list')) UP.lock = true; });
+document.addEventListener('change', e => { if (page === 'upd' && e.target.closest && e.target.closest('#list')) UP.lock = true; });
+
+const blobB64 = b => new Promise((ok, no) => {
+  const r = new FileReader();
+  r.onload = () => ok(String(r.result).split(',')[1]);
+  r.onerror = () => no(new Error('تعذر قراءة الملف'));
+  r.readAsDataURL(b);
+});
+function progress(pid, tid) {
+  return (frac, txt) => {
+    const p = $('#' + pid), t = $('#' + tid); if (!p) return;
+    p.classList.remove('hidden');
+    p.firstElementChild.style.width = Math.round(frac * 100) + '%';
+    if (t) t.textContent = txt || (Math.round(frac * 100) + '%');
+  };
+}
+// رفع ملف إلى Drive على دفعات (2MB لكل دفعة)
+async function upFile(kind, file, onp) {
+  const s = await api('adminUploadStart', { kind, size: file.size, mime: file.type });
+  if (!s.success) throw new Error(s.error || 'تعذر بدء الرفع');
+  const CH = 2 * 1024 * 1024;
+  let start = 0, id = null;
+  while (start < file.size) {
+    const end = Math.min(file.size, start + CH);
+    const data = await blobB64(file.slice(start, end));
+    let r, tries = 0;
+    do { r = await api('adminUploadChunk', { session: s.session, start, total: file.size, data }); }
+    while (!r.success && r.error !== 'unauthorized' && ++tries < 3);
+    if (!r.success) throw new Error(r.error || 'فشل الرفع');
+    start = end;
+    onp(start / file.size, 'جاري الرفع ' + Math.round(start / file.size * 100) + '% — لا تغلق الصفحة');
+    if (r.done) id = r.id;
+  }
+  if (!id) throw new Error('لم يكتمل الرفع، أعد المحاولة');
+  return id;
+}
+
+PG.upd = {
+  list() {
+    const s = D.settings, ver = parseInt(s.latestVersion, 10) || 0, hasApk = !!s.apkFileId, hasVid = !!s.videoUrl;
+    const mb = n => ((+n || 0) / 1048576).toFixed(1) + ' MB';
+    return `
+    <div class="card"><div class="hd"><h3>${ico('upd')} تحديث التطبيق</h3>${hasApk ? `<span class="badge sApproved">منشور: ${esc(s.updateName || ver)} (${ver})</span>` : '<span class="badge sPending">لا يوجد تحديث</span>'}</div>
+      <div class="mu sm" style="margin-bottom:12px">ارفع ملف APK الجديد. رسالة التحديث تظهر فقط للمستخدمين الذين إصدارهم <b>أقل</b> من رقم الإصدار، ويثبّتونه من داخل التطبيق بضغطة واحدة. لازم يكون موقّعاً بنفس مفتاح النسخة المثبّتة ورقمه أعلى.</div>
+      <div class="fld2"><div><label class="f">رقم الإصدار (versionCode)</label><input type="number" id="uv" min="1" value="${ver || ''}" placeholder="مثال: 3"></div><div><label class="f">اسم الإصدار</label><input type="text" id="un2" value="${esc(s.updateName)}" placeholder="مثال: 1.2"></div></div>
+      <label class="f">رسالة التحديث (تظهر للمستخدم)</label><textarea id="unt" rows="3" placeholder="ما الجديد في هذا الإصدار؟">${esc(s.updateNotes)}</textarea>
+      <div class="row2"><div class="grow"><b>تحديث إلزامي</b><div class="mu sm">لا يستطيع المستخدم تخطّيه</div></div><label class="sw"><input type="checkbox" id="ufo" ${s.updateForce === 'true' ? 'checked' : ''}><i></i></label></div>
+      <label class="f">ملف APK ${hasApk ? '(اتركه فارغاً لتعديل الرسالة فقط)' : ''}</label><input type="file" id="uapk" accept=".apk,application/vnd.android.package-archive">
+      <div class="prog hidden" id="upg"><i></i></div><div class="mu sm" id="upt"></div>
+      <div class="btns"><button class="btn pri" data-act="updpub">${ico('send', 18)} ${hasApk ? 'نشر / حفظ' : 'رفع ونشر التحديث'}</button>${hasApk ? `<button class="btn bad" data-act="updrm">${ico('trash', 16)} إيقاف التحديث</button>` : ''}</div>
+      ${hasApk ? `<div class="note" style="margin-top:12px">حجم الملف المنشور: ${mb(s.apkSize)}</div>` : ''}
+    </div>
+
+    <div class="card"><div class="hd"><h3>${ico('video')} فيديو «طريقة عمل الجميل»</h3>${hasVid ? '<span class="badge sApproved">منشور</span>' : '<span class="badge sPending">لا يوجد فيديو</span>'}</div>
+      <div class="mu sm" style="margin-bottom:12px">يظهر زر «طريقة عمل الجميل» داخل قائمة إنشاء الجميل فقط لو في فيديو. بعد رفع فيديو جديد قد يحتاج Drive بضع دقائق لمعالجته قبل ما يشتغل.</div>
+      ${hasVid ? `<div class="note" style="margin-bottom:12px;word-break:break-all" dir="ltr">${esc(s.videoUrl)}</div>` : ''}
+      <label class="f">رفع فيديو من الجهاز</label><input type="file" id="uvid" accept="video/*">
+      <div class="prog hidden" id="vpg"><i></i></div><div class="mu sm" id="vpt"></div>
+      <div class="btns"><button class="btn pri" data-act="vidup">${ico('send', 18)} رفع الفيديو</button>${hasVid ? `<button class="btn bad" data-act="vidrm">${ico('trash', 16)} حذف الفيديو</button>` : ''}</div>
+      <label class="f" style="margin-top:14px">أو الصق رابط (YouTube / Drive / ملف mp4)</label>
+      <input type="url" id="vlk" dir="ltr" placeholder="https://" value="${hasVid && !s.videoFileId ? esc(s.videoUrl) : ''}">
+      <button class="btn ghost blk" data-act="vidlink">حفظ الرابط</button>
+    </div>
+
+    <div class="card"><div class="hd"><h3>${ico('cash')} زر «سحب لأول مرة فقط»</h3></div>
+      <div class="mu sm" style="margin-bottom:12px">يظهر للمستخدم زر بمبلغ ثابت (مثلاً «اسحب 10 جنيه — لأول مرة فقط») ويُستخدم مرة واحدة فقط لكل مستخدم (الطلبات المرفوضة لا تُحسب). السحب العادي يظل بالحد الأدنى من صفحة الإعدادات.</div>
+      <div class="fld2"><div><label class="f">مبلغ الزر (ج.م)</label><input type="number" step="any" min="0" id="fmw" value="${esc(s.firstMinWithdraw)}"></div>
+      <div><label class="f">رسوم أول سحب (فارغ = نفس الرسوم العادية)</label><input type="number" step="any" min="0" id="fwf" value="${esc(s.firstWithdrawFee)}"></div></div>
+      <button class="btn pri blk" data-act="wdsave">حفظ</button>
+    </div>`;
+  }
+};
+
+Object.assign(ACT, {
+  async updpub() {
+    const version = parseInt($('#uv').value, 10), name = $('#un2').value.trim(), notes = $('#unt').value.trim(), force = $('#ufo').checked;
+    const f = ($('#uapk').files || [])[0];
+    if (!(version > 0)) return toast('اكتب رقم الإصدار', true);
+    if (!f) {
+      if (!D.settings.apkFileId) return toast('اختر ملف APK أولاً', true);
+      const r = await api('adminSaveSettings', { settings: { latestVersion: String(version), updateName: name, updateNotes: notes, updateForce: force ? 'true' : 'false' } });
+      if (r.success) { UP.lock = false; toast('تم الحفظ'); sync(true); } else toast(r.error || 'فشل', true);
+      return;
+    }
+    if (!/\.apk$/i.test(f.name)) return toast('الملف لازم يكون بصيغة APK', true);
+    if (!(await ask({ title: 'نشر التحديث؟', msg: 'سيظهر لكل مستخدم إصداره أقل من ' + version + '.', ok: 'نشر' }))) return;
+    UP.busy = true;
+    try {
+      const id = await upFile('apk', f, progress('upg', 'upt'));
+      const r = await api('adminUploadFinish', { kind: 'apk', id, version, name, notes, force });
+      if (!r.success) throw new Error(r.error || 'فشل النشر');
+      UP.busy = false; UP.lock = false; toast('تم نشر التحديث ✓'); sync(true);
+    } catch (e) { UP.busy = false; toast(e.message || 'فشل الرفع', true); }
+  },
+  async updrm() {
+    if (!(await ask({ title: 'إيقاف التحديث؟', msg: 'سيُحذف ملف APK ولن تظهر رسالة التحديث لأحد.', ok: 'إيقاف', bad: true }))) return;
+    const r = await api('adminRemoveApk');
+    if (r.success) { UP.lock = false; toast('تم إيقاف التحديث'); sync(true); } else toast(r.error || 'فشل', true);
+  },
+  async vidup() {
+    const f = ($('#uvid').files || [])[0];
+    if (!f) return toast('اختر ملف فيديو', true);
+    UP.busy = true;
+    try {
+      const id = await upFile('video', f, progress('vpg', 'vpt'));
+      const r = await api('adminUploadFinish', { kind: 'video', id });
+      if (!r.success) throw new Error(r.error || 'فشل النشر');
+      UP.busy = false; UP.lock = false; toast('تم رفع الفيديو ✓ (قد يحتاج Drive دقائق لمعالجته)'); sync(true);
+    } catch (e) { UP.busy = false; toast(e.message || 'فشل الرفع', true); }
+  },
+  async vidlink() {
+    const u = $('#vlk').value.trim();
+    if (!/^https?:\/\//i.test(u)) return toast('اكتب رابطاً صحيحاً يبدأ بـ https://', true);
+    const r = await api('adminSaveSettings', { settings: { videoUrl: u, videoFileId: '' } });
+    if (r.success) { UP.lock = false; toast('تم حفظ الرابط'); sync(true); } else toast(r.error || 'فشل', true);
+  },
+  async vidrm() {
+    if (!(await ask({ title: 'حذف الفيديو؟', msg: 'سيختفي زر طريقة عمل الجميل من التطبيق.', ok: 'حذف', bad: true }))) return;
+    const r = await api('adminRemoveVideo');
+    if (r.success) { UP.lock = false; toast('تم حذف الفيديو'); sync(true); } else toast(r.error || 'فشل', true);
+  },
+  async wdsave() {
+    const r = await api('adminSaveSettings', { settings: { firstMinWithdraw: $('#fmw').value, firstWithdrawFee: $('#fwf').value } });
+    if (r.success) { UP.lock = false; toast('تم الحفظ'); sync(true); } else toast(r.error || 'فشل', true);
+  }
+});
+
+
 // ======================= الأحداث =======================
 document.addEventListener('click', e => {
   if (e.target.id === 'mo') return closeModal();
